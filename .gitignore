@@ -1,5 +1,9 @@
 /originals
 /rnaseq
+/tools/bowtie2-2.2.2
+/tools/bowtie2-2.2.2-linux-x86_64.zip
+/tools/RSEM-1.3.0
+/tools/v1.3.0.tar.gz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
