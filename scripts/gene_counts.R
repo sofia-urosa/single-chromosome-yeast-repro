@@ -53,10 +53,54 @@ for (i in seq_along(samples)){
 #count looks like:
 # gene_id  WT_1
 # YYYY     3
+
 # remove gene_id
 
 rownames(count) <- count$gene_id
 count$gene_id <- NULL
 
 count <- round(count)
-head(count)
+
+#create DESeq db
+
+condition <- factor(c(rep("WT",3),rep("SY14",3)))
+print(condition)
+
+coldata <- data.frame(
+  row.names = samples,
+  condition = condition
+)
+
+dds <- DESeqDataSetFromMatrix(
+  countData = count,
+  colData   = coldata,
+  design    = ~ condition
+)
+
+#filter low-count genes
+dds <- dds[rowSums(counts(dds)) > 10, ]
+
+#run DESeq2
+dds <- DESeq(dds)
+
+res <- results(dds)
+res$gene_id <- rownames(res)
+
+#order by adj pvalue
+res <- res[order(res$padj), ]
+
+#with definition of fold change more than 2 and false discovery rate (FDR) <0.001
+sig <- subset(res, abs(log2FoldChange) > 1 & padj < 0.001)
+
+
+#make gene_id the first col:
+res_out <- res[, c("gene_id", setdiff(colnames(res), "gene_id"))]
+sig_out <- sig[, c("gene_id", setdiff(colnames(sig), "gene_id"))]
+
+#export results
+
+write.csv(res_out, file.path(output_dir, "full_dseq_res.csv"), row.names = FALSE)
+write.csv(sig_out, file.path(output_dir, "sig_dseq_res.csv"), row.names = FALSE)
+
+message("Done! Results saved in: ", output_dir)
+
