@@ -1,0 +1,70 @@
+---
+title: "misc_graphing"
+format: html
+editor: visual
+---
+
+```{r}
+library(pheatmap)
+
+mat <- read.csv("/cephfs/volumes/hpc_data_grp/msc_appbio/70e465a3-ea70-4bd6-b919-9da7af124271/Group20_ABCC/outputs/hm.csv", header = TRUE, check.names = FALSE)
+
+rownames(mat) <- mat$gene_id
+mat$gene_id <- NULL
+
+mat <- as.matrix(mat)
+```
+
+```{r}
+colSums(is.na(mat))
+sum(is.infinite(mat))
+```
+
+```{r}
+
+#| fig-width: 5
+#| fig-asp: 5 
+
+pheatmap(
+  mat,
+  scale = "none",
+  clustering_distance_rows = "euclidean",
+  clustering_distance_cols = "euclidean",
+  color = colorRampPalette(c("blue", "green", "yellow", "red"))(100),
+  show_rownames = FALSE,
+  main = "Heatmap of transcriptome profiles (VST)"
+)
+```
+
+b\.
+
+```{r}
+cor_mat <- cor(mat, method = "pearson")
+```
+
+```{r}
+pheatmap(
+  cor_mat,
+  clustering_method = "complete",
+  color = colorRampPalette(c("blue", "white", "red"))(100),
+  display_numbers = TRUE,        # shows the 0.97, 0.98 values
+  number_format = "%.2f",        # round to 2 decimal places
+  main = "Sample-to-sample Pearson correlations"
+)
+```
+
+```{r}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("biomaRt")
+
+mart <- useMart("ensembl", dataset = "scerevisiae_gene_ensembl")
+annot <- getBM(attributes = c("ensembl_gene_id", "transcript_length"),
+               filters = "ensembl_gene_id",
+               values = rownames(counts),
+               mart = mart)
+
+# match lengths to count matrix
+gene_lengths <- annot$transcript_length[match(rownames(counts), annot$ensembl_gene_id)]
+```

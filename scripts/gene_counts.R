@@ -104,3 +104,17 @@ write.csv(sig_out, file.path(output_dir, "sig_dseq_res.csv"), row.names = FALSE)
 
 message("Done! Results saved in: ", output_dir)
 
+#we cant create graphs easily inside of the container, so we prep the data here
+
+vsd <- vst(dds, blind = TRUE)
+mat <- assay(vsd)
+head(mat)
+
+mat_out <- data.frame(
+  gene_id = rownames(mat),
+  mat,
+  row.names = NULL        # ensures rownames are NOT reused
+)
+
+write.csv(mat_out, file.path(output_dir, "hm.csv"), row.names = FALSE)
+
