@@ -4,6 +4,8 @@ format: html
 editor: visual
 ---
 
+Graphing helpers:
+
 ```{r}
 library(pheatmap)
 
@@ -22,8 +24,8 @@ sum(is.infinite(mat))
 
 ```{r}
 
-#| fig-width: 5
-#| fig-asp: 5 
+png("/cephfs/volumes/hpc_data_grp/msc_appbio/70e465a3-ea70-4bd6-b919-9da7af124271/Group20_ABCC/outputs/heatmap_transcriptome.png",
+    width = 2400, height = 2000, res = 300)
 
 pheatmap(
   mat,
@@ -32,39 +34,178 @@ pheatmap(
   clustering_distance_cols = "euclidean",
   color = colorRampPalette(c("blue", "green", "yellow", "red"))(100),
   show_rownames = FALSE,
-  main = "Heatmap of transcriptome profiles (VST)"
+  main = "Heatmap of transcriptome profiles"
 )
+
+dev.off()
+
 ```
 
-b\.
+b\. Pearson correlations
 
 ```{r}
 cor_mat <- cor(mat, method = "pearson")
 ```
 
 ```{r}
+#save
+png("/cephfs/volumes/hpc_data_grp/msc_appbio/70e465a3-ea70-4bd6-b919-9da7af124271/Group20_ABCC/outputs/pearson_correlation.png",
+    width = 2400, height = 2000, res = 300)
+
 pheatmap(
   cor_mat,
   clustering_method = "complete",
-  color = colorRampPalette(c("blue", "white", "red"))(100),
+  color = colorRampPalette(c("navy", "white", "firebrick"))(100),
   display_numbers = TRUE,        # shows the 0.97, 0.98 values
-  number_format = "%.2f",        # round to 2 decimal places
-  main = "Sample-to-sample Pearson correlations"
+  number_format = "%.3f",        # round to 2 decimal places
+  main = "Pearson correlation",
+  number_color = "white"
+)
+
+dev.off()
+```
+
+Extra:
+
+Transcripts per million
+
+1. Get gene lengths:
+
+```{r}
+
+#get me the genes
+gtf <- read.table(
+  "/cephfs/volumes/hpc_data_grp/msc_appbio/70e465a3-ea70-4bd6-b919-9da7af124271/Group20_ABCC/originals/genes.gtf",
+  sep = "\t",
+  quote = "",
+  comment.char = "#",
+  stringsAsFactors = FALSE,
+  header = FALSE
+)
+
+exons <- gtf[gtf$V3 == "exon", ]
+
+get_gene_id <- function(x) sub('.*gene_id "([^"]+)".*', '\\1', x)
+
+gene_ids <- sapply(exons$V9, get_gene_id)
+
+exon_lengths <- exons$V5 - exons$V4 + 1
+
+gene_lengths <- tapply(exon_lengths, gene_ids, sum)
+head(gene_lengths)
+```
+2. Load count matrix
+
+```{r}
+raw_c <- read.csv(
+  "/cephfs/volumes/hpc_data_grp/msc_appbio/70e465a3-ea70-4bd6-b919-9da7af124271/Group20_ABCC/outputs/full_raw_counts.csv",
+  header = TRUE,
+  row.names = 1,
+  check.names = FALSE
 )
 ```
 
 ```{r}
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+dim(raw_c)
+head(rownames(raw_c))
+head(raw_c[,1])
+```
+3. Match gene len to gene order
 
-BiocManager::install("biomaRt")
+```{r}
+genes <- rownames(raw_c)
+length_vec <- gene_lengths[genes]
+```
 
-mart <- useMart("ensembl", dataset = "scerevisiae_gene_ensembl")
-annot <- getBM(attributes = c("ensembl_gene_id", "transcript_length"),
-               filters = "ensembl_gene_id",
-               values = rownames(counts),
-               mart = mart)
+4. Remove unannotated genes
 
-# match lengths to count matrix
-gene_lengths <- annot$transcript_length[match(rownames(counts), annot$ensembl_gene_id)]
+```{r}
+
+keep <- !is.na(length_vec)
+
+raw_c_filt <- raw_c[keep, ]
+length_vec_filt <- length_vec[keep]
+```
+
+```{r}
+sum(is.na(length_vec_filt))  # should be 0
+```
+
+```{r}
+sum(length_vec_filt == 0)
+sum(length_vec_filt == 0, na.rm = TRUE)
+```
+5. Convert to kilobases and calculate TPM
+
+```{r}
+gene_lengths_kb <- length_vec_filt / 1000
+
+#TPM
+cpk <- raw_c_filt / gene_lengths_kb
+scaling_factors <- colSums(cpk)
+
+tpm <- t(t(cpk) / scaling_factors) * 1e6
+
+sum(is.na(tpm)) #check for no N/A, otherwise heatmap will fail
+```
+```{r}
+#log transform stabilizes variance and also check scale
+log2_tpm <- log2(tpm+1)
+range(log2_tpm)
+```
+
+Stabilized vs non-stabilized data:
+
+Before:
+```{r}
+library(ggplot2)
+library(reshape2)
+
+plot(
+  tpm[, "WT_1"], tpm[, "WT_2"],
+  pch = 19, cex = 0.4, col = rgb(0,0,0,0.3),
+  xlab = "WT_1 TPM",
+  ylab = "WT_2 TPM",
+  main = "Replicates BEFORE log-transform"
+)
+```
+
+After:
+```{r}
+plot(
+  log2_tpm[, "WT_1"], log2_tpm[, "WT_2"],
+  pch = 19, cex = 0.4, col = rgb(0,0,0,0.3),
+  xlab = "WT_1 log2 TPM",
+  ylab = "WT_2 log2 TPM",
+  main = "Replicates AFTER log-transform"
+)
+```
+
+
+```{r}
+log2(tpm["YAL001C", ] + 1)
+```
+The paper uses values 0-4 but doesn't clearly explain why... this is our best attempt to replicate it exactly. 
+
+```{r}
+log2_tpm_rescaled <- log2_tpm / max(log2_tpm) * 4
+range(log2_tpm_rescaled)
+```
+6. Graph
+```{r}
+png("/cephfs/volumes/hpc_data_grp/msc_appbio/70e465a3-ea70-4bd6-b919-9da7af124271/Group20_ABCC/outputs/rescaled_heatmap_transcriptome.png",
+    width = 2400, height = 2000, res = 300)
+
+pheatmap(
+  log2_tpm_rescaled,
+  scale = "none",
+  clustering_distance_rows = "euclidean",
+  clustering_distance_cols = "euclidean",
+  color = colorRampPalette(c("blue", "green", "yellow", "red"))(100),
+  show_rownames = FALSE,
+  main = "Heatmap of transcriptome profiles"
+)
+
+dev.off()
+
 ```

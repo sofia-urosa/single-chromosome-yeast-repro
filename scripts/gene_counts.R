@@ -86,6 +86,9 @@ dds <- DESeq(dds)
 res <- results(dds)
 res$gene_id <- rownames(res)
 
+#raw counts
+raw_counts <- counts(dds, normalized = FALSE)
+
 #order by adj pvalue
 res <- res[order(res$padj), ]
 
@@ -102,13 +105,10 @@ sig_out <- sig[, c("gene_id", setdiff(colnames(sig), "gene_id"))]
 write.csv(res_out, file.path(output_dir, "full_dseq_res.csv"), row.names = FALSE)
 write.csv(sig_out, file.path(output_dir, "sig_dseq_res.csv"), row.names = FALSE)
 
-message("Done! Results saved in: ", output_dir)
-
 #we cant create graphs easily inside of the container, so we prep the data here
 
 vsd <- vst(dds, blind = TRUE)
 mat <- assay(vsd)
-head(mat)
 
 mat_out <- data.frame(
   gene_id = rownames(mat),
@@ -117,4 +117,14 @@ mat_out <- data.frame(
 )
 
 write.csv(mat_out, file.path(output_dir, "hm.csv"), row.names = FALSE)
+head(raw_counts)
 
+raw_out <- data.frame(
+  gene_id = rownames(raw_counts),
+  raw_counts,
+  row.names = NULL        # ensures rownames are NOT reused
+)
+
+write.csv(raw_out, file.path(output_dir, "full_raw_counts.csv"), row.names = FALSE)
+
+message("Done! Results saved in: ", output_dir)
