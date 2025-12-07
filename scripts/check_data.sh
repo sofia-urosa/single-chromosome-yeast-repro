@@ -98,50 +98,15 @@ for f in "${FILES[@]}"; do
 done
 
 if [ ${#MISSING_FILES[@]} -eq 0 ]; then
-    echo "All RNA-seq FASTQ files are already present. No download needed."
+    echo "All RNA-seq FASTQ files are already present."
     exit 0
 fi
 
-echo "Missing files:"
+echo "Missing files to run RNA Seq:"
 for f in "${MISSING_FILES[@]}"; do
     echo "  - $f"
 done
 
 
-echo "Do you want to download ALL SY14 and WT transcriptome FASTQs from Biosino into $RNASEQ_DIR ? (y/n)"
-read -r CONFIRM
+echo "Please download the missing files from biosinio."
 
-if [ "$CONFIRM" != "y" ]; then
-    echo "Skipping download."
-    exit 0
-fi
-
-
-echo
-echo "RNA-seq data download (Biosino)"
-echo "Enter your Biosino username:"
-read -r BIOSINO_EMAIL
-
-if [ -z "$BIOSINO_EMAIL" ]; then
-    echo "No email entered. Aborting..."
-    exit 1
-fi
-
-#source directories
-SY14_DIR="/Public/byRun/OER00/OER0002/OER000220/OER00022078"
-WT_DIR="/Public/byRun/OER00/OER0000/OER000001/OER00000135"
-
-SFTP_CMDS=$(mktemp)
-(
-echo "lcd $RNASEQ_DIR"
-
-echo "cd $SY14_DIR"
-echo "get *"
-
-echo "cd $WT_DIR"
-echo "get *"
-
-echo "bye"
-) | sftp -P 44398 "${BIOSINO_USER}@fms.biosino.org"
-
-echo "Download complete"
