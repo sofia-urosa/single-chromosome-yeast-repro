@@ -70,34 +70,7 @@ echo "Reference genome check complete"
 RNASEQ_DIR="originals/rnaseq"
 mkdir -p "$RNASEQ_DIR"
 
-
-echo
-echo "RNA-seq data download (Biosino)"
-echo "Enter your Biosino User:"
-read -r BIOSINO_EMAIL
-
-if [ -z "$BIOSINO_EMAIL" ]; then
-    echo "No email entered. Aborting..."
-    exit 1
-fi
-
-#source directories
-SY14_DIR="/Public/byRun/OER00/OER0002/OER000220/OER00022078"
-WT_DIR="/Public/byRun/OER00/OER0000/OER000001/OER00000135"
-
-sftp -P 44398 "${BIOSINO_EMAIL}@fms.biosino.org" <<EOF
-ls -l $SY14_DIR
-ls -l $WT_DIR
-EOF
-
-echo
-echo "Do you want to download these files into $RNASEQ_DIR ? (y/n)"
-read -r ANS
-
-if [ "$ANS" != "y" ]; then
-    echo "Skipping download."
-    exit 0
-fi
+#check if files exist before downloading them
 
 #expected files
 
@@ -131,64 +104,44 @@ fi
 
 echo "Missing files:"
 for f in "${MISSING_FILES[@]}"; do
-    echo "  $f"
+    echo "  - $f"
 done
 
-echo
-echo "Proceed to download missing files? (y/n)"
+
+echo "Do you want to download ALL SY14 and WT transcriptome FASTQs from Biosino into $RNASEQ_DIR ? (y/n)"
 read -r CONFIRM
 
-if [ "$CONFIRM" != "y" ]; then
-    echo "Aborting download."
+if [ "$ANS" != "y" ]; then
+    echo "Skipping download."
     exit 0
 fi
 
 
-SFTP_CMDS=$(mktemp)
+echo
+echo "RNA-seq data download (Biosino)"
+echo "Enter your Biosino username:"
+read -r BIOSINO_EMAIL
 
-echo "lcd $RNASEQ_DIR" >> "$SFTP_CMDS"
+if [ -z "$BIOSINO_EMAIL" ]; then
+    echo "No email entered. Aborting..."
+    exit 1
+fi
 
-# SY14 files
-echo "cd $SY14_DIR" >> "$SFTP_CMDS"
-for f in "${MISSING_FILES[@]}"; do
-    if [[ "$f" == SY14-* ]]; then
-        echo "mget $f" >> "$SFTP_CMDS"
-    fi
-done
-
-# WT files
-echo "cd $WT_DIR" >> "$SFTP_CMDS"
-for f in "${MISSING_FILES[@]}"; do
-    if [[ "$f" == WT-* ]]; then
-        echo "mget $f" >> "$SFTP_CMDS"
-    fi
-done
-
-# Execute SFTP once
+#source directories
+SY14_DIR="/Public/byRun/OER00/OER0002/OER000220/OER00022078"
+WT_DIR="/Public/byRun/OER00/OER0000/OER000001/OER00000135"
 
 SFTP_CMDS=$(mktemp)
+(
+echo "lcd $RNASEQ_DIR"
 
-echo "lcd $RNASEQ_DIR" >> "$SFTP_CMDS"
+echo "cd $SY14_DIR"
+echo "get *"
 
-# SY14 files
-echo "cd $SY14_DIR" >> "$SFTP_CMDS"
-for f in "${MISSING_FILES[@]}"; do
-    if [[ "$f" == SY14-* ]]; then
-        echo "mget $f" >> "$SFTP_CMDS"
-    fi
-done
+echo "cd $WT_DIR"
+echo "get *"
 
-# WT files
-echo "cd $WT_DIR" >> "$SFTP_CMDS"
-for f in "${MISSING_FILES[@]}"; do
-    if [[ "$f" == WT-* ]]; then
-        echo "mget $f" >> "$SFTP_CMDS"
-    fi
-done
+echo "bye"
+) | sftp -P 44398 "${BIOSINO_USER}@fms.biosino.org"
 
-# Execute SFTP once
-sftp -P 44398 -b "$SFTP_CMDS" "${BIOSINO_EMAIL}@fms.biosino.org"
-
-rm "$SFTP_CMDS"
-
-echo "Download complete."
+echo "Download complete"
