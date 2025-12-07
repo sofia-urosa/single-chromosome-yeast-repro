@@ -75,18 +75,18 @@ mkdir -p "$RNASEQ_DIR"
 #expected files
 
 FILES=(
-    "SY14-1_HCLJ5CCXY_L1_1.clean.fq.gz"
-    "SY14-1_HCLJ5CCXY_L1_2.clean.fq.gz"
-    "SY14-2_HCLJ5CCXY_L1_1.clean.fq.gz"
-    "SY14-2_HCLJ5CCXY_L1_2.clean.fq.gz"
-    "SY14-3_HCLJ5CCXY_L1_1.clean.fq.gz"
-    "SY14-3_HCLJ5CCXY_L1_2.clean.fq.gz"
-    "WT-1_HCLJ5CCXY_L1_1.clean.fq.gz"
-    "WT-1_HCLJ5CCXY_L1_2.clean.fq.gz"
-    "WT-2_HCLJ5CCXY_L1_1.clean.fq.gz"
-    "WT-2_HCLJ5CCXY_L1_2.clean.fq.gz"
-    "WT-3_HCLJ5CCXY_L1_1.clean.fq.gz"
-    "WT-3_HCLJ5CCXY_L1_2.clean.fq.gz"
+    "OED00023578_SY14-1_HCLJ5CCXY_L1_2.clean.fq.gz"
+    "OED00023582_SY14-1_HCLJ5CCXY_L1_1.clean.fq.gz"
+    "OED00023581_SY14-2_HCLJ5CCXY_L1_1.clean.fq.gz"
+    "OED00023577_SY14-2_HCLJ5CCXY_L1_2.clean.fq.gz"
+    "OED00023579_SY14-3_HCLJ5CCXY_L1_1.clean.fq.gz"
+    "OED00023580_SY14-3_HCLJ5CCXY_L1_2.clean.fq.gz"
+    "OED00025297_WT-1_HCLJ5CCXY_L1_1.clean.fq.gz"
+    "OED00025294_WT-1_HCLJ5CCXY_L1_2.clean.fq.gz"
+    "OED00025301_WT-2_HCLJ5CCXY_L1_1.clean.fq.gz"
+    "OED00025292_WT-2_HCLJ5CCXY_L1_2.clean.fq.gz"
+    "OED00025298_WT-3_HCLJ5CCXY_L1_1.clean.fq.gz"
+    "OED00025299_WT-3_HCLJ5CCXY_L1_2.clean.fq.gz"
 )
 
 MISSING_FILES=()
