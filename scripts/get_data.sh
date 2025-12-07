@@ -111,7 +111,7 @@ done
 echo "Do you want to download ALL SY14 and WT transcriptome FASTQs from Biosino into $RNASEQ_DIR ? (y/n)"
 read -r CONFIRM
 
-if [ "$ANS" != "y" ]; then
+if [ "$CONFIRM" != "y" ]; then
     echo "Skipping download."
     exit 0
 fi
