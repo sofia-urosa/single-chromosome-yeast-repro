@@ -26,27 +26,28 @@ if [ ! -f "${REF}.bwt" ]; then
     bwa index "$REF"
 fi
 
-for r1 in "$FASTQ_DIR"/*_R1*.fastq.gz; do
-    [ -e "$r1" ] || continue
+echo "Flag1"
+for sample in BY4742 SY14; do
+    for lib in R1 R2; do
 
-    sample=$(basename "$r1" | sed 's/_R1.*//')
-    r2="${FASTQ_DIR}/${sample}_R2.fastq.gz"
+        r1="${FASTQ_DIR}/${sample}_${lib}_1.fastq.gz"
+        r2="${FASTQ_DIR}/${sample}_${lib}_2.fastq.gz"
+        out_bam="${OUT_DIR}/${sample}_${lib}.bam"
 
-    if [ ! -f "$r2" ]; then
-        echo "Missing R2 for $sample, skipping"
+    if [[ ! -f "$r1" || ! -f "$r2" ]]; then
+        echo "Missing FASTQC files for $sample $lib, skipping"
         continue
     fi
 
-    outbam="${OUT_DIR}/${sample}.hic.bam"
-    sorted="${OUT_DIR}/${sample}.hic.sorted.bam"
+    echo "Aligning $sample $lib"
+    echo "  R1 = $r1"
+    echo "  R2 = $r2"
 
-    echo "processing sample $sample"
-
-    bwa mem -5 -t 8 "$REF" "$r1" "$r2" | samtools view -bS - > "$outbam"
-
-    samtools sort -@ 8 -o "$sorted" "$outbam"
-    samtools index "$sorted"
+    bwa mem -t "$SLURM_CPUS_PER_TASK" "$REF" "$r1" "$r2" | samtools view -bS - > | samtools sort -@ "$SLURM_CPUS_PER_TASK" -o "$out_bam" -
+    samtools index "$out_bam"
     rm "$outbam"
 
-    echo "$sorted Done"
+    echo "$sample $lib done"
+    done
 done
+
