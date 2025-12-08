@@ -15,6 +15,7 @@ DIRS=(
     "originals/hic"
     "originals/ref"
     "originals/wgs"
+    "originals/rnaseq"
     "outputs"
     "outputs/logs"
     "outputs/rnaseq"
