@@ -5,6 +5,10 @@
 /tools/RSEM-1.3.0
 /tools/v1.3.0.tar.gz
 /tools/bioc_3_5.sif
+/assemblies
+/logs
+/outputs
+/tools
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
