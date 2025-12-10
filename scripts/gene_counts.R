@@ -103,7 +103,7 @@ sig_out <- sig[, c("gene_id", setdiff(colnames(sig), "gene_id"))]
 #export results
 
 write.csv(res_out, file.path(output_dir, "full_dseq_res.csv"), row.names = FALSE)
-write.csv(sig_out, file.path(output_dir, "sig_dseq_res.csv"), row.names = FALSE)
+write.csv(sig_out, file.path(output_dir, "significant_dseq_res.csv"), row.names = FALSE)
 
 #we cant create graphs easily inside of the container, so we prep the data here
 
@@ -116,7 +116,7 @@ mat_out <- data.frame(
   row.names = NULL        # ensures rownames are NOT reused
 )
 
-write.csv(mat_out, file.path(output_dir, "hm.csv"), row.names = FALSE)
+write.csv(mat_out, file.path(output_dir, "heatmap_data.csv"), row.names = FALSE)
 head(raw_counts)
 
 raw_out <- data.frame(
@@ -125,6 +125,6 @@ raw_out <- data.frame(
   row.names = NULL        # ensures rownames are NOT reused
 )
 
-write.csv(raw_out, file.path(output_dir, "full_raw_counts.csv"), row.names = FALSE)
+#write.csv(raw_out, file.path(output_dir, "full_raw_counts.csv"), row.names = FALSE)
 
 message("Done! Results saved in: ", output_dir)
