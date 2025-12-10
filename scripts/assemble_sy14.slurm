@@ -19,7 +19,7 @@ fi
 
 module load openjdk/1.8.0_265-b01-gcc-13.2.0    # canu NEEDS java.
 
-PRJ_DIR="/scratch/users/k25119154/cc/single-chromosome-yeast-repro"
+PRJ_DIR="$(pwd)" # this should be run inside the project root.
 CANU="${PRJ_DIR}/tools/canu-1.5/Linux-amd64/bin/canu"
 
 READS="${PRJ_DIR}/originals/pacbio/SY14_pacbio.fastq.gz"
