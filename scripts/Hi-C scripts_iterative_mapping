@@ -1,3 +1,6 @@
+# Script for Hi-C data iterative mapping
+# Should be running in the Conda environment hic_env_02
+
 import os
 import logging
 from hiclib import mapping
@@ -5,7 +8,7 @@ from mirnylib import h5dict, genome
 
 logging.basicConfig(level=logging.DEBUG)
 
-# paths (CHANGE THESE IF NEEDED)
+# paths
 FASTQ1 = '/scratch/grp/msc_appbio/Group20_ABCC/originals/hic/SY14_HiC_Rep1_1.fastq.gz'
 FASTQ2 = '/scratch/grp/msc_appbio/Group20_ABCC/originals/hic/SY14_HiC_Rep1_2.fastq.gz'
 BOWTIE = '/software/spackages_v0_21_prod/apps/linux-ubuntu22.04-zen2/gcc-13.2.0/bowtie2-2.5.1-ac3cxzvaqiga23xqqiain2bycgjnfkyr/bin/bowtie2'
@@ -16,7 +19,7 @@ TMPDIR = 'tmp'
 if not os.path.exists(TMPDIR):
     os.mkdir(TMPDIR)
 
-# A. Map read 1
+# A. Mapping read 1
 mapping.iterative_mapping(
     bowtie_path=BOWTIE,
     bowtie_index_path=BT_INDEX,
@@ -31,7 +34,7 @@ mapping.iterative_mapping(
     bowtie_flags='--very-sensitive'
 )
 
-# B. Map read 2
+# B. Mapping read 2
 mapping.iterative_mapping(
     bowtie_path=BOWTIE,
     bowtie_index_path=BT_INDEX,
