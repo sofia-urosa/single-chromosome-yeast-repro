@@ -76,6 +76,8 @@ echo -e "\e[1m  	Bowtie2 2.2.2\e[0m"
 echo -e "\e[1m   	RSEM 1.3.0\e[0m"
 echo -e "\e[1m   	DESeq2 1.16.1\e[0m"
 echo
+echo -e "\e[1;32mAlignment tools:\e[0m"
+echo -e "\e[1m          Canu 1.5\e[0m"
 sleep 5
 
 #make sure PATH exports are only made once
@@ -137,5 +139,21 @@ else
         singularity pull "$SIF_PATH" "$DESEQ_IMG"
     fi
 fi
+
+#canu
+CANU_DIR="${TOOLS_DIR}/canu-1.5"
+CANU_TAR="${TOOLS_DIR}/canu-1.5.Linux-amd64.tar.xz"
+CANU_URL="https://github.com/marbl/canu/releases/download/v1.5/canu-1.5.Linux-amd64.tar.xz"
+
+if [ -d "$CANU_DIR" ]; then
+    echo "Canu 1.5 already installed"
+else
+    echo "Installing Canu 1.5"
+    wget -O "$CANU_TAR" "$CANU_URL"
+    tar -xvf "$CANU_TAR" -C "$TOOLS_DIR"
+    mv "${TOOLS_DIR}/canu-1.5" "$CANU_DIR" 2>/dev/null || true
+fi
+
+append_once "$CANU_DIR/bin"
 
 echo "Setup is complete!"

@@ -19,7 +19,7 @@ fi
 
 module load openjdk/1.8.0_265-b01-gcc-13.2.0 	# canu NEEDS java.
 
-PRJ_DIR="/scratch/users/k25119154/cc/single-chromosome-yeast-repro"
+PRJ_DIR="$(pwd)" # this should be run inside the project root.
 CANU="${PRJ_DIR}/tools/canu-1.5/Linux-amd64/bin/canu"
 
 READS="${PRJ_DIR}/originals/pacbio/BY4742_WT_*.fastq.gz" # * because we have 2!
@@ -37,9 +37,11 @@ ls -lh ${READS} || { echo "ERROR: READS NOT FOUND"; exit 1; }
 $CANU \
   -p BY4742 \
   -d "$OUT_DIR" \
-  genomeSize=12m \ 		# expected genome size (estimate coverage)
+  genomeSize=12m \
   useGrid=false \
-  gnuplotTested=true \		# we had problems with this and libraries so we set as true to skip checks
-  -pacbio-raw $READS		# raw (uncorrected) PacBio reads in FASTQ
-
+  gnuplotTested=true \
+  -pacbio-raw $READS
+# expected genome size (estimate coverage)
+# we had problems with this and libraries so we set as true to skip check
+# raw (uncorrected) PacBio reads in FASTQ
 echo "[$(date)] Finished BY4742 assembly"
