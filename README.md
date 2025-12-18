@@ -48,9 +48,9 @@ The following software versions were used:
   Supplementary notebooks for exploratory analysis and figure generation.
 
 
-## How to run 
+## How to run the pipeline
 
-This guide assumes you're running the code from the project's root folder. 
+This guide assumes you're running the code from the project's root folder. You can run it from elsewhere, but as a safety measure 
 
 ### 1. Clone the repository
 ```bash
@@ -64,11 +64,68 @@ cd single-chromosome-yeast-repro
 
 ### 3. Download data in originals/
 Subdirectories are expected for:
-	•	pacbio/
-	•	wgs/
-	•	rnaseq/
-	•	hic/
+- pacbio/
+- wgs/
+- rnaseq/
+- hic/
+  
+Run:
+```bash
+./scripts/check_data.sh
+```
 
+For a summary of expected files.
+
+### 4. Short read alignment / Long read Assembly 
+
+For alignment:
+
+```bash
+sbatch ./scripts/align_assembly.slurm
+```
+
+For assembly:
+
+```bash
+sbatch ./scripts/assemble_by4742.slurm
+sbatch ./scripts/assemble_sy14.slurm
+```
+
+⚠️ Assemblies take a lot of computing power. We recommend running one strain at a time to reduce the probability of reaching SLURM resource limits per user. 
+
+### 5. RNA-seq
+
+```bash
+./scripts/rnaseq_pipeline.sh
+./scripts/rsem_pipeline.slurm
+```
+
+Differential expression analysis:
+This code uses DESeq2 v1.16.1, which needs a version of R unavailable at the time. Therefore we use a singularity:
+
+```bash
+singularity exec   --bind .:/mnt   tools/bioc_3_5.sif   Rscript /mnt/scripts/gene_counts.R   /mnt/outputs/rnaseq/quant   /mnt/outputs/rnaseq/expression_analysis
+```
+
+Figure reproduction:
+
+Fig 4a (transcriptome heatmap and pearson correlation matrix)
+
+```bash
+Rscript ./scripts/fig4a_heatmap.R
+```
+
+Fig 4b (up and down regulated gene count from significantly expressed genes)
+
+```bash
+Rscript ./scripts/fig4b_stress_genes.R
+```
+
+### 6. HiC
+
+```bash
+sbatch "Hi-C Slurm job submission script.slurm"
+```
 
 ## Purpose
 
