@@ -52,6 +52,7 @@ The following software versions were used:
 
 This guide assumes you're running the code from the project's root folder. You can run it from elsewhere, but as a safety measure 
 
+⚠️ Before running any shell code make sure they are executable files (chmod +x)
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/sofia-urosa/single-chromosome-yeast-repro.git
@@ -124,7 +125,7 @@ Rscript ./scripts/fig4b_stress_genes.R
 ### 6. HiC
 
 ```bash
-sbatch "Hi-C Slurm job submission script.slurm"
+./scripts/hic_pipeline.sh
 ```
 
 ## Purpose
