@@ -3,6 +3,8 @@ cd "$REF_DIR"
 #get the data needed to run this project.
 #IMPORTANT!! you need a Biosinio account for this.
 
+module load fastqc/0.11.9-gcc-13.2.0
+
 check_filelist(){
     local DIR="$1"
     shift
@@ -17,8 +19,7 @@ check_filelist(){
     done
 
     if [ ${#MISSING_FILES[@]} -eq 0 ]; then
-        echo "All files are already present"
-        exit 0
+        return 0
     fi
 
     echo "Missing files in "${DIR}":"
@@ -29,8 +30,23 @@ check_filelist(){
     return 1
 }
 
+helper_fastqc() {
+    local DIR="$1"
+    shift
+    local FILES=("$@")
+
+    for f in "${FILES[@]}"; do
+        if [ ! -f "${DIR}/${f}" ]; then
+            echo "Missing file: ${DIR}/${f}"
+            return 1
+        fi
+    done
+    return 0
+}
+
 #Reference genome:
 
+cd originals/ref
 #raw names
 FA_GZ="GCF_000146045.2_R64_genomic.fna.gz"
 GTF_GZ="GCF_000146045.2_R64_genomic.gtf.gz"
@@ -127,4 +143,63 @@ check_filelist "$RNASEQ_DIR" "${RNA_FILES[@]}"
 check_filelist "$SHORTSEQ_DIR" "${SHORTSEQ_FILES[@]}"
 check_filelist "$LONGSEQ_DIR" "${LONGSEQ_FILES[@]}"
 
-echo "Please download the missing files from biosinio."
+ALL_EXIST=true
+
+if ! helper_fastqc "$RNASEQ_DIR" "${RNA_FILES[@]}"; then
+    ALL_EXIST=false
+fi
+
+if ! helper_fastqc "$SHORTSEQ_DIR" "${SHORTSEQ_FILES[@]}"; then
+    ALL_EXIST=false
+fi
+
+if ! helper_fastqc "$LONGSEQ_DIR" "${LONGSEQ_FILES[@]}"; then
+    ALL_EXIST=false
+fi
+
+# dont do qc if files dont exist
+if [ "$ALL_EXIST" = false ]; then
+    echo ""
+    exit 1
+fi
+
+echo "Proceeding with FastQC..."
+echo ""
+
+#fastqc should be available
+
+if ! command -v fastqc &> /dev/null; then
+    echo "Error: FastQC not found. Please install or load the module."
+    exit 1
+fi
+
+FASTQC_OUT="outputs/fastqc"
+mkdir -p "${FASTQC_OUT}"/{rnaseq,wgs,pacbio}
+
+# Build file lists
+RNA_PATHS=()
+for f in "${RNA_FILES[@]}"; do
+    RNA_PATHS+=("${RNASEQ_DIR}/${f}")
+done
+
+WGS_PATHS=()
+for f in "${SHORTSEQ_FILES[@]}"; do
+    WGS_PATHS+=("${SHORTSEQ_DIR}/${f}")
+done
+
+PACBIO_PATHS=()
+for f in "${LONGSEQ_FILES[@]}"; do
+    PACBIO_PATHS+=("${LONGSEQ_DIR}/${f}")
+done
+
+
+# Run FastQC on RNA-seq
+fastqc -q -o "${FASTQC_OUT}/rnaseq" "${RNA_PATHS[@]}"
+
+# Run FastQC on WGS
+fastqc -q -o "${FASTQC_OUT}/wgs" "${WGS_PATHS[@]}"
+
+# Run FastQC on PacBio files
+fastqc -q -o "${FASTQC_OUT}/pacbio" "${PACBIO_PATHS[@]}"
+
+echo "Results saved to: ${FASTQC_OUT}"
